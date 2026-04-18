@@ -11,3 +11,6 @@
 .env
 .env.*
 !.env.example
+
+# RSpec example status persistence file (developer-local, regenerated per run)
+/spec/examples.txt
