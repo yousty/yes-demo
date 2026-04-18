@@ -127,6 +127,111 @@ Then visit http://localhost:3100/admin/eventstore/ and look at the
 `TaskFlow-Board-<id>` stream to see the emitted `TaskFlow::BoardCreated`
 event.
 
+## Console usage
+
+The Rails console is the fastest way to drive aggregates, inspect read
+models, and look at the underlying event stream. Open one inside the
+backend container:
+
+```bash
+docker compose exec backend bundle exec rails console
+```
+
+### Aggregate shortcuts
+
+`config/initializers/yes_core.rb` sets `config.aggregate_shortcuts = true`,
+so on console boot `yes-core` discovers every aggregate under
+`app/contexts/**/aggregate.rb` and registers a short-hand constant for it.
+Type `shortcuts` to list them:
+
+```
+> shortcuts
+
+Available Aggregate Shortcuts:
+======================================================================
+TF::Board → TaskFlow::Board::Aggregate
+TF::Task  → TaskFlow::Task::Aggregate
+======================================================================
+```
+
+`TF` is a freshly-built shortcut module (not an alias of the real
+`TaskFlow` namespace), so `TF::Board.new(id)` returns an aggregate
+instance and `TaskFlow::Board` still resolves to the namespace module
+that contains the Aggregate class.
+
+### Running commands
+
+Each `command :name` declared in an aggregate becomes an instance method.
+Payload keys map 1-to-1 to the `payload` declaration in the command. Use
+the demo identities from `frontend/lib/users.ts` so you can see the
+results in the UI immediately:
+
+```ruby
+require 'securerandom'
+
+ALICE = '11111111-1111-4111-8111-111111111111'
+BOB   = '22222222-2222-4222-8222-222222222222'
+
+board_id = SecureRandom.uuid
+board    = TF::Board.new(board_id)
+board.create_board(title: 'Sprint 42', description: 'Q2 goals', owner_id: ALICE)
+board.add_member(member_id: BOB)
+board.change_title(title: 'Sprint 42 — revised')
+
+task_id = SecureRandom.uuid
+task    = TF::Task.new(task_id)
+task.create_task(board_id: board_id, title: 'Wire up payments', priority: 'high')
+task.assign_to_member(assignee_id: BOB)
+task.start
+task.complete
+```
+
+Each call returns a `Yes::Core::Commands::Response`; check
+`response.success?` and `response.event` if you need the emitted event.
+
+> **Authorization.** Direct aggregate calls bypass the command API's
+> per-command authorizer — your console session is implicitly
+> super-admin. To exercise the `authorize do … end` block (e.g. "must be
+> a member of this board"), drive the aggregates through `POST
+> /v1/commands` instead, as shown in the curl smoke test above.
+
+### Inspecting commands and state
+
+```ruby
+TF::Board.new.commands
+# => { add_member: [:member_added], archive: [:archived],
+#      change_description: [:description_changed], ... }
+
+board.title          # => "Sprint 42 — revised"
+board.member_ids     # => ["11111111-...", "22222222-..."]
+board.archived       # => false
+board.reload         # re-fetch the read model after an out-of-band change
+```
+
+Read models are plain ActiveRecord — `TF::Board` writes into the `boards`
+table (`Board` AR class), `TF::Task` writes into `tasks` (`Task` AR
+class). Either go through the aggregate or query AR directly:
+
+```ruby
+Board.find(board_id).title
+Task.where(board_id: board_id, status: 'in_progress').pluck(:title, :assignee_id)
+```
+
+### Inspecting the event stream
+
+```ruby
+board.events.to_a.map(&:type)
+# => ["TaskFlow::BoardCreated", "TaskFlow::Board::MemberAdded",
+#     "TaskFlow::Board::TitleChanged"]
+
+board.latest_event   # last PgEventstore::Event in the stream
+board.event_revision # zero-based stream revision of that event
+```
+
+For a graphical view of the same stream open
+http://localhost:3100/admin/eventstore/ and search for
+`TaskFlow-Board-<board_id>`.
+
 ## Development
 
 ### Running the aggregate specs
