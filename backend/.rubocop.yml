@@ -1,0 +1,78 @@
+plugins:
+  - rubocop-rails
+  - rubocop-rspec
+  - rubocop-performance
+
+AllCops:
+  TargetRubyVersion: 3.3
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - bin/**/*
+    - db/schema.rb
+    - db/structure.sql
+    - tmp/**/*
+    - log/**/*
+    - vendor/**/*
+
+Layout/LineLength:
+  Max: 120
+
+Metrics/BlockLength:
+  Exclude:
+    - 'app/contexts/**/aggregate.rb'
+    - 'spec/**/*'
+    - 'config/**/*'
+    - 'db/migrate/*'
+
+Metrics/ClassLength:
+  Max: 200
+  Exclude:
+    - 'app/contexts/**/aggregate.rb'
+
+Metrics/MethodLength:
+  Max: 25
+
+Metrics/AbcSize:
+  Max: 25
+
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: always
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+RSpec/ExampleLength:
+  Max: 15
+
+RSpec/NestedGroups:
+  Max: 5
+
+RSpec/DescribeClass:
+  Enabled: false
+
+RSpec/NamedSubject:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+
+Rails/Output:
+  Exclude:
+    - 'db/seeds.rb'
+    - 'lib/tasks/**/*'
+
+Rails/Exit:
+  Exclude:
+    - 'spec/rails_helper.rb'
+    - 'spec/spec_helper.rb'
+
+Style/OpenStructUse:
+  # The yes auth adapter contract requires an object responding to #token that
+  # returns a decoded JWT payload array. OpenStruct mirrors the shape used by
+  # the real JWT verifier while staying trivially inspectable for the demo.
+  Exclude:
+    - 'app/lib/dev_auth_adapter.rb'

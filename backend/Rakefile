@@ -1,0 +1,12 @@
+# frozen_string_literal: true
+
+require_relative 'config/application'
+
+Rails.application.load_tasks
+
+# pg_eventstore ships its Rake tasks as a non-engine .rake file — load it explicitly.
+pg_eventstore_tasks = File.join(
+  Gem::Specification.find_by_name('pg_eventstore').gem_dir,
+  'lib/pg_eventstore/tasks/setup.rake'
+)
+load pg_eventstore_tasks if File.exist?(pg_eventstore_tasks)

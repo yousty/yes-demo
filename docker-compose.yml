@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:18.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      RAILS_ENV: development
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PG_EVENTSTORE_URI: postgresql://postgres:postgres@postgres:5432/taskflow_eventstore
+      CORS_ORIGINS: http://localhost:3101,http://localhost:3100
+      SECRET_KEY_BASE: demo-secret-not-for-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3100:3000"
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      BACKEND_URL: http://backend:3000
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:3100
+      PORT: 3000
+    depends_on:
+      - backend
+    ports:
+      - "3101:3000"
+    volumes:
+      - ./frontend:/app
+      # Anonymous volume keeps the node_modules installed in the image isolated
+      # from the bind-mounted source so Next.js can find deps at startup.
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  postgres-data:

@@ -1,0 +1,11 @@
+.git
+.gitignore
+.rspec_status
+log/*
+tmp/*
+spec/examples.txt
+.env
+.env.*
+!.env.example
+Dockerfile
+.dockerignore

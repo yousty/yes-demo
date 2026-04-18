@@ -1,0 +1,67 @@
+en:
+  aggregates:
+    task_flow:
+      board:
+        commands:
+          create_board:
+            guards:
+              not_yet_created:
+                error: 'Board already exists'
+              title_present:
+                error: 'Title is required'
+          add_member:
+            guards:
+              not_archived:
+                error: 'Cannot add members to an archived board'
+              not_already_member:
+                error: 'User is already a member of this board'
+          remove_member:
+            guards:
+              not_owner:
+                error: 'The board owner cannot be removed'
+              is_member:
+                error: 'User is not a member of this board'
+          transfer_ownership:
+            guards:
+              different_owner:
+                error: 'User is already the owner'
+              new_owner_is_member:
+                error: 'New owner must be a member of the board first'
+      task:
+        commands:
+          create_task:
+            guards:
+              not_yet_created:
+                error: 'Task already exists'
+              title_present:
+                error: 'Title is required'
+              board_exists:
+                error: 'Board does not exist'
+              board_not_archived:
+                error: 'Cannot create tasks on an archived board'
+          assign_to_member:
+            guards:
+              board_not_archived:
+                error: 'Cannot assign on an archived board'
+              assignee_is_board_member:
+                error: 'Assignee must be a member of the board'
+          start:
+            guards:
+              status_is_todo:
+                error: 'Only todo tasks can be started'
+              board_not_archived:
+                error: 'Cannot start a task on an archived board'
+          complete:
+            guards:
+              status_is_in_progress:
+                error: 'Only in-progress tasks can be completed'
+          reopen:
+            guards:
+              status_is_done:
+                error: 'Only done tasks can be reopened'
+          cancel:
+            guards:
+              not_already_cancelled:
+                error: 'Task is already cancelled'
+              not_done:
+                error: 'Completed tasks cannot be cancelled'
