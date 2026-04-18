@@ -8,21 +8,21 @@ Next.js 16 (App Router) and talks to the backend **only** through the command
 and read APIs.
 
 ```
-┌───────────────────────┐  HTTP (JSON)   ┌──────────────────────────────┐
-│  Next.js 16 frontend  │ ─────────────▶ │  Rails 8.1 backend           │
-│  (server components + │                │  • Yes::Command::Api engine  │
-│   server actions)     │ ◀───────────── │  • Yes::Read::Api engine     │
-└───────────────────────┘     queries    │  • Aggregates (TaskFlow::*)  │
-                                         │  • Read models (boards/tasks)│
-                                         │  • PgEventstore admin UI     │
-                                         └──────────────┬───────────────┘
-                                                        │
-                                                        ▼
-                                             ┌─────────────────────┐
-                                             │  Postgres 18        │
-                                             │   • taskflow_dev    │
-                                             │   • taskflow_eventstore
-                                             └─────────────────────┘
+┌───────────────────────┐  HTTP (JSON)   ┌──────────────────────────────────┐
+│  Next.js 16 frontend  │ ─────────────▶ │  Rails 8.1 backend               │
+│  (server components + │                │  • Yes::Command::Api engine      │
+│   server actions)     │ ◀───────────── │  • Yes::Read::Api engine         │
+└───────────────────────┘     queries    │  • Aggregates (TaskFlow::*)      │
+                                         │  • Read models (boards/tasks)    │
+                                         │  • PgEventstore admin UI         │
+                                         └────────────────┬─────────────────┘
+                                                          │
+                                                          ▼
+                                             ┌───────────────────────────┐
+                                             │  Postgres 18              │
+                                             │   • taskflow_dev          │
+                                             │   • taskflow_eventstore   │
+                                             └───────────────────────────┘
 ```
 
 ## Domain
